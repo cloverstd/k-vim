@@ -424,6 +424,12 @@ let g:html_indent_style1 = "inc"
 "for jquery
 Bundle 'nono/jquery.vim'
 
+" CoffeeScript
+Bundle 'kchmck/vim-coffee-script'
+
+" Json 高亮
+Bundle 'elzr/vim-json'
+
 "###### Jinja2 #########
 Bundle 'Glench/Vim-Jinja2-Syntax'
 
