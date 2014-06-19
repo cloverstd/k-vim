@@ -385,7 +385,7 @@ vnoremap < <gv
 vnoremap > >gv
 
 " y$ -> Y Make Y behave like other capitals
-map Y y$
+"map Y y$
 
 " select all
 map <Leader>sa ggVG"
@@ -402,6 +402,7 @@ inoremap kj <Esc>
 " 滚动Speed up scrolling of the viewport slightly
 nnoremap <C-e> 2<C-e>
 nnoremap <C-y> 2<C-y>
+
 
 
 "Jump to start and end of line using the home row keys
@@ -503,3 +504,5 @@ highlight SpellRare term=underline cterm=underline
 highlight clear SpellLocal
 highlight SpellLocal term=underline cterm=underline
 
+" 系统剪贴板
+set clipboard=unnamed
