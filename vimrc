@@ -461,7 +461,7 @@ function! AutoSetFileHead()
 endfunc
 
 " F10 to run python script
-nnoremap <buffer> <F10> :exec '!python' shellescape(@%, 1)<cr>
+"nnoremap <buffer> <F10> :exec '!python' shellescape(@%, 1)<cr>
 
 "==========================================
 " Theme Settings  主题设置
@@ -506,3 +506,96 @@ highlight SpellLocal term=underline cterm=underline
 
 " 系统剪贴板
 set clipboard=unnamed
+
+" F10 编译，F11 执行，支持 C/C++/Java/Python
+func! CompileGcc()
+    exec "w"
+    let compilecmd="!gcc "
+    let compileflag="-o %< "
+    if search("mpi\.h") != 0
+        let compilecmd = "!mpicc "
+    endif
+    if search("glut\.h") != 0
+        let compileflag .= " -lglut -lGLU -lGL "
+    endif
+    if search("cv\.h") != 0
+        let compileflag .= " -lcv -lhighgui -lcvaux "
+    endif
+    if search("omp\.h") != 0
+        let compileflag .= " -fopenmp "
+    endif
+    if search("math\.h") != 0
+        let compileflag .= " -lm "
+    endif
+    exec compilecmd." % ".compileflag
+endfunc
+func! CompileGpp()
+    exec "w"
+    let compilecmd="!g++ "
+    let compileflag="-o %< "
+    if search("mpi\.h") != 0
+        let compilecmd = "!mpic++ "
+    endif
+    if search("glut\.h") != 0
+        let compileflag .= " -lglut -lGLU -lGL "
+    endif
+    if search("cv\.h") != 0
+        let compileflag .= " -lcv -lhighgui -lcvaux "
+    endif
+    if search("omp\.h") != 0
+        let compileflag .= " -fopenmp "
+    endif
+    if search("math\.h") != 0
+        let compileflag .= " -lm "
+    endif
+    exec compilecmd." % ".compileflag
+endfunc
+ 
+func! RunPython()
+        exec "!python %"
+endfunc
+func! CompileJava()
+    exec "!javac %"
+endfunc
+
+func! CompileCoffeeScript()
+    exec "make"
+endfunc
+ 
+ 
+func! CompileCode()
+        exec "w"
+        if &filetype == "cpp"
+                exec "call CompileGpp()"
+        elseif &filetype == "c"
+                exec "call CompileGcc()"
+        elseif &filetype == "python"
+                exec "call RunPython()"
+        elseif &filetype == "java"
+                exec "call CompileJava()"
+        elseif &filetype == 'coffee'
+                exec "call CompileCoffeeScript()"
+        endif
+endfunc
+ 
+func! RunResult()
+        exec "call CompileCode()"
+        if search("mpi\.h") != 0
+            exec "!mpirun -np 4 ./%<"
+        elseif &filetype == "cpp"
+            exec "! ./%<"
+        elseif &filetype == "c"
+            exec "! ./%<"
+        elseif &filetype == "python"
+            exec "call RunPython()"
+        elseif &filetype == "java"
+            exec "!java %<"
+        elseif &filetype == "coffee"
+            exec "!node %<.js"
+        endif
+endfunc
+ 
+map <F10> :call CompileCode()<CR>
+imap <F10> <ESC>:call CompileCode()<CR>
+vmap <F10> <ESC>:call CompileCode()<CR>
+map <F11> :call RunResult()<CR>
