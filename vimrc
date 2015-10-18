@@ -1,10 +1,11 @@
 "==========================================
 " Author:  wklken
-" Version: 7
+" Version: 9.0
 " Email: wklken@yeah.net
-" BlogPost: http://wklken.me
+" BlogPost: http://www.wklken.me
 " ReadMe: README.md
-" Last_modify: 2014-03-15
+" Donation: http://www.wklken.me/pages/donation.html
+" Last_modify: 2015-05-02
 " Sections:
 "       -> Initial Plugin 加载插件
 "       -> General Settings 基础设置
@@ -17,7 +18,6 @@
 "
 "       -> 插件配置和具体设置在vimrc.bundles中
 "==========================================
-
 
 "==========================================
 " Initial Plugin 加载插件
@@ -74,11 +74,11 @@ set noswapfile
 
 
 "create undo file
-set undolevels=1000         " How many undos
-set undoreload=10000        " number of lines to save for undo
-if v:version >= 730
-    set undofile                " keep a persistent backup file
-    set undodir=/tmp/vimundo/
+if has('persistent_undo')
+  set undolevels=1000         " How many undos
+  set undoreload=10000        " number of lines to save for undo
+  set undofile                " So is persistent undo ...
+  set undodir=/tmp/vimundo/
 endif
 
 set wildignore=*.swp,*.bak,*.pyc,*.class,.svn
@@ -94,6 +94,9 @@ set t_ti= t_te=
 
 "- 则点击光标不会换,用于复制
 set mouse-=a             " 鼠标暂不启用, 键盘党....
+" set mouse=a                 " Automatically enable mouse usage
+" set mousehide               " Hide the mouse cursor while typing
+
 
 " 修复ctrl+m 多光标操作选择的bug，但是改变了ctrl+v进行字符选中时将包含光标下的字符
 "set selection=exclusive
@@ -170,6 +173,18 @@ set foldenable
 " marker    使用标记进行折叠, 默认标记是 {{{ 和 }}}
 set foldmethod=indent
 set foldlevel=99
+" 代码折叠自定义快捷键
+let g:FoldMethod = 0
+map <leader>zz :call ToggleFold()<cr>
+fun! ToggleFold()
+    if g:FoldMethod == 0
+        exe "normal! zM"
+        let g:FoldMethod = 1
+    else
+        exe "normal! zR"
+        let g:FoldMethod = 0
+    endif
+endfun
 
 " 缩进配置
 
@@ -360,23 +375,75 @@ nnoremap <silent> g* g*zz
 nnoremap # *
 nnoremap * #
 
+" for # indent, python文件中输入新行时#号注释不切回行首
+autocmd BufNewFile,BufRead *.py inoremap # X<c-h>#
+
+
 " 去掉搜索高亮
 noremap <silent><leader>/ :nohls<CR>
 
 " --------tab/buffer相关
 
 "Use arrow key to change buffer"
+" TODO: 如何跳转到确定的buffer?
+" :b1 :b2   :bf :bl
+nnoremap [b :bprevious<cr>
+nnoremap ]b :bnext<cr>
 noremap <left> :bp<CR>
 noremap <right> :bn<CR>
 
-map <leader>tn :tabnew<cr>
-map <leader>to :tabonly<cr>
-map <leader>tc :tabclose<cr>
-map <leader>tm :tabmove
 
-" Opens a new tab with the current buffer's path
-" Super useful when editing files in the same directory
-map <leader>te :tabedit <c-r>=expand("%:p:h")<cr>/
+" tab 操作
+" TODO: ctrl + n 变成切换tab的方法
+" http://vim.wikia.com/wiki/Alternative_tab_navigation
+" http://stackoverflow.com/questions/2005214/switching-to-a-particular-tab-in-vim
+"map <C-2> 2gt
+map <leader>th :tabfirst<cr>
+map <leader>tl :tablast<cr>
+
+map <leader>tj :tabnext<cr>
+map <leader>tk :tabprev<cr>
+map <leader>tn :tabnext<cr>
+map <leader>tp :tabprev<cr>
+
+map <leader>te :tabedit<cr>
+map <leader>td :tabclose<cr>
+map <leader>tm :tabm<cr>
+
+
+" 新建tab  Ctrl+t
+nnoremap <C-t>     :tabnew<CR>
+inoremap <C-t>     <Esc>:tabnew<CR>
+" TODO: 配置成功这里, 切换更方便, 两个键
+" nnoremap <C-S-tab> :tabprevious<CR>
+" nnoremap <C-tab>   :tabnext<CR>
+" inoremap <C-S-tab> <Esc>:tabprevious<CR>i
+" inoremap <C-tab>   <Esc>:tabnext<CR>i
+" nnoremap <C-Left> :tabprevious<CR>
+" nnoremap <C-Right> :tabnext<CR>
+
+" normal模式下切换到确切的tab
+noremap <leader>1 1gt
+noremap <leader>2 2gt
+noremap <leader>3 3gt
+noremap <leader>4 4gt
+noremap <leader>5 5gt
+noremap <leader>6 6gt
+noremap <leader>7 7gt
+noremap <leader>8 8gt
+noremap <leader>9 9gt
+noremap <leader>0 :tablast<cr>
+
+" Toggles between the active and last active tab "
+" The first tab is always 1 "
+let g:last_active_tab = 1
+" nnoremap <leader>gt :execute 'tabnext ' . g:last_active_tab<cr>
+" nnoremap <silent> <c-o> :execute 'tabnext ' . g:last_active_tab<cr>
+" vnoremap <silent> <c-o> :execute 'tabnext ' . g:last_active_tab<cr>
+nnoremap <silent> <leader>tt :execute 'tabnext ' . g:last_active_tab<cr>
+vnoremap <silent> <leader>tt :execute 'tabnext ' . g:last_active_tab<cr>
+autocmd TabLeave * let g:last_active_tab = tabpagenr()
+
 
 " ------- 选中及操作改键
 
@@ -385,7 +452,12 @@ vnoremap < <gv
 vnoremap > >gv
 
 " y$ -> Y Make Y behave like other capitals
-"map Y y$
+map Y y$
+
+" auto jump to end of select
+" vnoremap <silent> y y`]
+" vnoremap <silent> p p`]
+" nnoremap <silent> p p`]
 
 " select all
 map <Leader>sa ggVG"
@@ -404,13 +476,15 @@ nnoremap <C-e> 2<C-e>
 nnoremap <C-y> 2<C-y>
 
 
-
 "Jump to start and end of line using the home row keys
-nmap t o<ESC>k
-nmap T O<ESC>j
+" 增强tab操作, 导致这个会有问题, 考虑换键
+"nmap t o<ESC>k
+"nmap T O<ESC>j
 
 " Quickly close the current window
 nnoremap <leader>q :q<CR>
+" Quickly save the current file
+nnoremap <leader>w :w<CR>
 
 " Swap implementations of ` and ' jump to markers
 " By default, ' jumps to the marked line, ` jumps to the marked line and
@@ -425,21 +499,47 @@ nnoremap U <C-r>
 nmap <silent> <leader>ev :e $MYVIMRC<CR>
 nmap <silent> <leader>sv :so $MYVIMRC<CR>
 
+" Automatically set paste mode in Vim when pasting in insert mode
+function! WrapForTmux(s)
+  if !exists('$TMUX')
+    return a:s
+  endif
+
+  let tmux_start = "\<Esc>Ptmux;"
+  let tmux_end = "\<Esc>\\"
+
+  return tmux_start . substitute(a:s, "\<Esc>", "\<Esc>\<Esc>", 'g') . tmux_end
+endfunction
+
+let &t_SI .= WrapForTmux("\<Esc>[?2004h")
+let &t_EI .= WrapForTmux("\<Esc>[?2004l")
+
+function! XTermPasteBegin()
+  set pastetoggle=<Esc>[201~
+  set paste
+  return ""
+endfunction
+inoremap <special> <expr> <Esc>[200~ XTermPasteBegin()
+
 "==========================================
 " FileType Settings  文件类型设置
 "==========================================
 
 " Python 文件的一般设置，比如不要 tab 等
 autocmd FileType python set tabstop=4 shiftwidth=4 expandtab ai
+autocmd FileType ruby set tabstop=2 shiftwidth=2 softtabstop=2 expandtab ai
+autocmd BufRead,BufNew *.md,*.mkd,*.markdown  set filetype=markdown.mkd
+
 
 " 保存python文件时删除多余空格
-" Delete trailing white space on save, useful for Python and CoffeeScript ;)
-func! DeleteTrailingWS()
-  exe "normal mz"
-  %s/\s\+$//ge
-  exe "normal `z"
-endfunc
-autocmd BufWrite *.py :call DeleteTrailingWS()
+fun! <SID>StripTrailingWhitespaces()
+    let l = line(".")
+    let c = col(".")
+    %s/\s\+$//e
+    call cursor(l, c)
+endfun
+autocmd FileType c,cpp,java,go,php,javascript,puppet,python,rust,twig,xml,yml,perl autocmd BufWritePre <buffer> :call <SID>StripTrailingWhitespaces()
+
 
 " 定义函数AutoSetFileHead，自动插入文件头
 autocmd BufNewFile *.sh,*.py exec ":call AutoSetFileHead()"
@@ -460,8 +560,15 @@ function! AutoSetFileHead()
     normal o
 endfunc
 
-" F10 to run python script
-"nnoremap <buffer> <F10> :exec '!python' shellescape(@%, 1)<cr>
+
+" set some keyword to highlight
+if has("autocmd")
+  " Highlight TODO, FIXME, NOTE, etc.
+  if v:version > 701
+    autocmd Syntax * call matchadd('Todo',  '\W\zs\(TODO\|FIXME\|CHANGED\|DONE\|XXX\|BUG\|HACK\)')
+    autocmd Syntax * call matchadd('Debug', '\W\zs\(NOTE\|INFO\|IDEA\|NOTICE\)')
+  endif
+endif
 
 "==========================================
 " Theme Settings  主题设置
@@ -470,6 +577,9 @@ endfunc
 " Set extra options when running in GUI mode
 if has("gui_running")
     set guifont=Monaco:h14
+    if has("gui_gtk2")   "GTK2
+        set guifont=Monaco\ 12,Monospace\ 12
+    endif
     set guioptions-=T
     set guioptions+=e
     set guioptions-=r
@@ -481,20 +591,31 @@ if has("gui_running")
     set t_Co=256
 endif
 
+" allows cursor change in tmux mode
+if exists('$TMUX')
+    let &t_SI = "\<Esc>Ptmux;\<Esc>\<Esc>]50;CursorShape=1\x7\<Esc>\\"
+    let &t_EI = "\<Esc>Ptmux;\<Esc>\<Esc>]50;CursorShape=0\x7\<Esc>\\"
+else
+    let &t_SI = "\<Esc>]50;CursorShape=1\x7"
+    let &t_EI = "\<Esc>]50;CursorShape=0\x7"
+endif
+
 " theme主题
 set background=dark
-colorscheme solarized
 set t_Co=256
+colorscheme solarized
+" colorscheme Tomorrow-Night
+" colorscheme Tomorrow-Night-Bright
+" colorscheme desert
 
-"colorscheme molokai
-"colorscheme desert
 
-"设置标记一列的背景颜色和数字一行颜色一致
+
+" 设置标记一列的背景颜色和数字一行颜色一致
 hi! link SignColumn   LineNr
 hi! link ShowMarksHLl DiffAdd
 hi! link ShowMarksHLu DiffChange
 
-"" for error highlight，防止错误整行标红导致看不清
+" for error highlight，防止错误整行标红导致看不清
 highlight clear SpellBad
 highlight SpellBad term=standout ctermfg=1 term=underline cterm=underline
 highlight clear SpellCap
@@ -503,99 +624,3 @@ highlight clear SpellRare
 highlight SpellRare term=underline cterm=underline
 highlight clear SpellLocal
 highlight SpellLocal term=underline cterm=underline
-
-" 系统剪贴板
-set clipboard=unnamed
-
-" F10 编译，F11 执行，支持 C/C++/Java/Python
-func! CompileGcc()
-    exec "w"
-    let compilecmd="!gcc "
-    let compileflag="-o %< "
-    if search("mpi\.h") != 0
-        let compilecmd = "!mpicc "
-    endif
-    if search("glut\.h") != 0
-        let compileflag .= " -lglut -lGLU -lGL "
-    endif
-    if search("cv\.h") != 0
-        let compileflag .= " -lcv -lhighgui -lcvaux "
-    endif
-    if search("omp\.h") != 0
-        let compileflag .= " -fopenmp "
-    endif
-    if search("math\.h") != 0
-        let compileflag .= " -lm "
-    endif
-    exec compilecmd." % ".compileflag
-endfunc
-func! CompileGpp()
-    exec "w"
-    let compilecmd="!g++ "
-    let compileflag="-o %< "
-    if search("mpi\.h") != 0
-        let compilecmd = "!mpic++ "
-    endif
-    if search("glut\.h") != 0
-        let compileflag .= " -lglut -lGLU -lGL "
-    endif
-    if search("cv\.h") != 0
-        let compileflag .= " -lcv -lhighgui -lcvaux "
-    endif
-    if search("omp\.h") != 0
-        let compileflag .= " -fopenmp "
-    endif
-    if search("math\.h") != 0
-        let compileflag .= " -lm "
-    endif
-    exec compilecmd." % ".compileflag
-endfunc
- 
-func! RunPython()
-        exec "!python %"
-endfunc
-func! CompileJava()
-    exec "!javac %"
-endfunc
-
-func! CompileCoffeeScript()
-    exec "make"
-endfunc
- 
- 
-func! CompileCode()
-        exec "w"
-        if &filetype == "cpp"
-                exec "call CompileGpp()"
-        elseif &filetype == "c"
-                exec "call CompileGcc()"
-        elseif &filetype == "python"
-                exec "call RunPython()"
-        elseif &filetype == "java"
-                exec "call CompileJava()"
-        elseif &filetype == 'coffee'
-                exec "call CompileCoffeeScript()"
-        endif
-endfunc
- 
-func! RunResult()
-        exec "call CompileCode()"
-        if search("mpi\.h") != 0
-            exec "!mpirun -np 4 ./%<"
-        elseif &filetype == "cpp"
-            exec "! ./%<"
-        elseif &filetype == "c"
-            exec "! ./%<"
-        elseif &filetype == "python"
-            exec "call RunPython()"
-        elseif &filetype == "java"
-            exec "!java %<"
-        elseif &filetype == "coffee"
-            exec "!node %<.js"
-        endif
-endfunc
- 
-map <F10> :call CompileCode()<CR>
-imap <F10> <ESC>:call CompileCode()<CR>
-vmap <F10> <ESC>:call CompileCode()<CR>
-map <F11> :call RunResult()<CR>
